@@ -368,7 +368,7 @@ class TypeDiscoverer<S> implements TypeInformation<S> {
 		Class<?> rawType = getType();
 
 		return rawType.isArray() //
-				|| Iterable.class.equals(rawType) //
+				|| Iterable.class.isAssignable(rawType) //
 				|| Collection.class.isAssignableFrom(rawType) //
 				|| Streamable.class.isAssignableFrom(rawType);
 	}
