@@ -1,3 +1,9 @@
+def p = [:]
+node {
+    checkout scm
+    p = readProperties interpolate: true, file: 'ci/pipeline.properties'
+}
+
 pipeline {
 	agent none
 
@@ -12,7 +18,7 @@ pipeline {
 	}
 
 	stages {
-		stage("test: baseline (jdk8)") {
+		stage("test: baseline (main)") {
 			when {
 				beforeAgent(true)
 				anyOf {
@@ -25,12 +31,12 @@ pipeline {
 			}
 			options { timeout(time: 30, unit: 'MINUTES') }
 			environment {
-				ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+				ARTIFACTORY = credentials("${p['artifactory.credentials']}")
 			}
 			steps {
 				script {
-					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list verify -Dsort -U -B'
 						}
 					}
@@ -47,18 +53,18 @@ pipeline {
 				}
 			}
 			parallel {
-				stage("test: baseline (jdk11)") {
+				stage("test: baseline (next)") {
 					agent {
 						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					environment {
-						ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+						ARTIFACTORY = credentials("${p['artifactory.credentials']}")
 					}
 					steps {
 						script {
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('adoptopenjdk/openjdk11:latest').inside('-v $HOME:/tmp/jenkins-home') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
+								docker.image(p['docker.java.next.image']).inside(p['docker.java.inside.basic']) {
 									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pjava11 clean dependency:list verify -Dsort -U -B'
 								}
 							}
@@ -66,18 +72,18 @@ pipeline {
 					}
 				}
 
-				stage("test: baseline (jdk17)") {
+				stage("test: baseline (LTS)") {
 					agent {
 						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					environment {
-						ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+						ARTIFACTORY = credentials("${p['artifactory.credentials']}")
 					}
 					steps {
 						script {
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('openjdk:17-bullseye').inside('-v $HOME:/tmp/jenkins-home') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
+								docker.image(p['docker.java.lts.image']).inside(p['docker.java.inside.basic']) {
 									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pjava11 clean dependency:list verify -Dsort -U -B'
 								}
 							}
@@ -101,13 +107,13 @@ pipeline {
 			options { timeout(time: 20, unit: 'MINUTES') }
 
 			environment {
-				ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+				ARTIFACTORY = credentials("${p['artifactory.credentials']}")
 			}
 
 			steps {
 				script {
-					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,artifactory ' +
 									'-Dartifactory.server=https://repo.spring.io ' +
 									"-Dartifactory.username=${ARTIFACTORY_USR} " +
