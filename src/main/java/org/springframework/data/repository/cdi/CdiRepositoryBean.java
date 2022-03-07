@@ -40,6 +40,7 @@ import javax.enterprise.inject.spi.PassivationCapable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.log.LogMessage;
 import org.springframework.data.repository.config.CustomRepositoryImplementationDetector;
 import org.springframework.data.repository.config.RepositoryFragmentConfiguration;
@@ -61,6 +62,7 @@ import org.springframework.util.StringUtils;
  * @author Jens Schauder
  * @author Christoph Strobl
  * @author Ariel Carrera
+ * @author Xeno Amess
  */
 public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapable {
 
@@ -261,7 +263,7 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 
 		return Arrays.stream(repositoryType.getAnnotations())//
 				.map(Annotation::annotationType)//
-				.filter(it -> it.isAnnotationPresent(Stereotype.class))//
+				.filter(it -> isAnnotatedWith(it, Stereotype.class))//
 				.collect(Collectors.toSet());
 	}
 
@@ -278,7 +280,7 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 	 * @see javax.enterprise.inject.spi.Bean#isAlternative()
 	 */
 	public boolean isAlternative() {
-		return repositoryType.isAnnotationPresent(Alternative.class);
+		return isAnnotatedWith(repositoryType, Alternative.class);
 	}
 
 	/*
@@ -519,6 +521,10 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 	public String toString() {
 		return String.format("CdiRepositoryBean: type='%s', qualifiers=%s", repositoryType.getName(),
 				qualifiers.toString());
+	}
+
+	private static boolean isAnnotatedWith(Class<?> type, Class<? extends Annotation> annotationType) {
+		return AnnotationUtils.findAnnotation(type, annotationType) != null;
 	}
 
 	enum DefaultCdiRepositoryConfiguration implements CdiRepositoryConfiguration {
