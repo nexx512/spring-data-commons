@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,7 @@ class CloseableIteratorUnitTests {
 	@Test // DATACMNS-1637
 	void shouldCreateStream() {
 
-		var iterator = new CloseableIteratorImpl<String>(Arrays.asList("1", "2", "3").iterator());
+		var iterator = new CloseableIteratorImpl<>(Arrays.asList("1", "2", "3").iterator());
 
 		var collection = iterator.stream().map(it -> "hello " + it).collect(Collectors.toList());
 
@@ -41,10 +42,40 @@ class CloseableIteratorUnitTests {
 		assertThat(iterator.closed).isFalse();
 	}
 
+	@Test // GH-2519
+	void shouldCount() {
+
+		var iterator = new CloseableIteratorImpl<>(Arrays.asList("1", "2", "3").iterator());
+
+		var count = iterator.stream().count();
+
+		assertThat(count).isEqualTo(3);
+	}
+
+	@Test // GH-2519
+	void shouldCountLargeStream() {
+
+		var iterator = new CloseableIteratorImpl<>(IntStream.range(0, 2048).boxed().iterator());
+
+		var count = iterator.stream().count();
+
+		assertThat(count).isEqualTo(2048);
+	}
+
+	@Test // GH-2519
+	void shouldApplyToList() {
+
+		var iterator = new CloseableIteratorImpl<>(Arrays.asList("1", "2", "3").iterator());
+
+		var list = iterator.stream().toList();
+
+		assertThat(list).isEqualTo(Arrays.asList("1", "2", "3"));
+	}
+
 	@Test // DATACMNS-1637
 	void closeStreamShouldCloseIterator() {
 
-		var iterator = new CloseableIteratorImpl<String>(Arrays.asList("1", "2", "3").iterator());
+		var iterator = new CloseableIteratorImpl<>(Arrays.asList("1", "2", "3").iterator());
 
 		try (var stream = iterator.stream()) {
 			assertThat(stream.findFirst()).hasValue("1");

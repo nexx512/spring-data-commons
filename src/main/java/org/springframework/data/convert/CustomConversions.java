@@ -15,6 +15,7 @@
  */
 package org.springframework.data.convert;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.ConverterRegistry;
@@ -42,6 +44,7 @@ import org.springframework.core.convert.converter.GenericConverter.ConvertiblePa
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.ConverterBuilder.ConverterAware;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.util.Predicates;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -57,6 +60,7 @@ import org.springframework.util.ObjectUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Xeno Amess
  * @since 2.0
  */
 public class CustomConversions {
@@ -755,8 +759,8 @@ public class CustomConversions {
 			Assert.notNull(converter, "Converter must not be null!");
 
 			var type = converter.getClass();
-			var isWriting = type.isAnnotationPresent(WritingConverter.class);
-			var isReading = type.isAnnotationPresent(ReadingConverter.class);
+			var isWriting = isAnnotatedWith(type, WritingConverter.class);
+			var isReading = isAnnotatedWith(type, ReadingConverter.class);
 
 			if (converter instanceof ConverterAware) {
 
@@ -782,6 +786,10 @@ public class CustomConversions {
 			} else {
 				throw new IllegalArgumentException(String.format("Unsupported converter type %s!", converter));
 			}
+		}
+
+		private static boolean isAnnotatedWith(Class<?> type, Class<? extends Annotation> annotationType) {
+			return AnnotationUtils.findAnnotation(type, annotationType) != null;
 		}
 
 		private Streamable<ConverterRegistration> getRegistrationFor(Object converter, Class<?> type, boolean isReading,
@@ -819,10 +827,6 @@ public class CustomConversions {
 			return this.storeConverters;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object o) {
 
@@ -841,10 +845,6 @@ public class CustomConversions {
 			return ObjectUtils.nullSafeEquals(storeConverters, that.storeConverters);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			var result = ObjectUtils.nullSafeHashCode(storeTypeHolder);
@@ -852,10 +852,6 @@ public class CustomConversions {
 			return result;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return "StoreConversions{" + "storeTypeHolder=" + storeTypeHolder + ", storeConverters=" + storeConverters + '}';
@@ -882,7 +878,7 @@ public class CustomConversions {
 		 * @param userConverters must not be {@literal null} use {@link Collections#emptyList()} instead.
 		 */
 		public ConverterConfiguration(StoreConversions storeConversions, List<?> userConverters) {
-			this(storeConversions, userConverters, it -> true);
+			this(storeConversions, userConverters, Predicates.isTrue());
 		}
 
 		/**

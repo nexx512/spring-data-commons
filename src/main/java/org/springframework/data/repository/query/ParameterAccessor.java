@@ -30,7 +30,7 @@ import org.springframework.lang.Nullable;
 public interface ParameterAccessor extends Iterable<Object> {
 
 	/**
-	 * Returns the {@link Pageable} of the parameters, if available. Returns {@code null} otherwise.
+	 * Returns the {@link Pageable} of the parameters, if available. Returns {@link Pageable#unpaged()} otherwise.
 	 *
 	 * @return
 	 */
@@ -38,7 +38,8 @@ public interface ParameterAccessor extends Iterable<Object> {
 
 	/**
 	 * Returns the sort instance to be used for query creation. Will use a {@link Sort} parameter if available or the
-	 * {@link Sort} contained in a {@link Pageable} if available. Returns {@code null} if no {@link Sort} can be found.
+	 * {@link Sort} contained in a {@link Pageable} if available. Returns {@link Sort#unsorted()} if no {@link Sort} can
+	 * be found.
 	 *
 	 * @return
 	 */
@@ -61,6 +62,7 @@ public interface ParameterAccessor extends Iterable<Object> {
 	 * @param index
 	 * @return
 	 */
+	@Nullable
 	Object getBindableValue(int index);
 
 	/**

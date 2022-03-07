@@ -91,10 +91,7 @@ public class ParametersParameterAccessor implements ParameterAccessor {
 		return this.values;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
-	 */
+	@Override
 	public Pageable getPageable() {
 
 		if (!parameters.hasPageableParameter()) {
@@ -106,10 +103,7 @@ public class ParametersParameterAccessor implements ParameterAccessor {
 		return pageable == null ? Pageable.unpaged() : pageable;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
-	 */
+	@Override
 	public Sort getSort() {
 
 		if (parameters.hasSortParameter()) {
@@ -145,22 +139,17 @@ public class ParametersParameterAccessor implements ParameterAccessor {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
+	@Nullable
 	protected <T> T getValue(int index) {
 		return (T) values[index];
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
-	 */
+	@Override
 	public Object getBindableValue(int index) {
 		return values[parameters.getBindableParameter(index).getIndex()];
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
-	 */
+	@Override
 	public boolean hasBindableNullValue() {
 
 		for (Parameter parameter : parameters.getBindableParameters()) {
@@ -172,10 +161,7 @@ public class ParametersParameterAccessor implements ParameterAccessor {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#iterator()
-	 */
+	@Override
 	public BindableParameterIterator iterator() {
 		return new BindableParameterIterator(this);
 	}
@@ -210,22 +196,18 @@ public class ParametersParameterAccessor implements ParameterAccessor {
 		 *
 		 * @return
 		 */
+		@Nullable
+		@Override
 		public Object next() {
 			return accessor.getBindableValue(currentIndex++);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#hasNext()
-		 */
+		@Override
 		public boolean hasNext() {
 			return bindableParameterCount > currentIndex;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#remove()
-		 */
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

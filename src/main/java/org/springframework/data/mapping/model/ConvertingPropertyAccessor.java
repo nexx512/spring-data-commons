@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link PersistentPropertyAccessor} that potentially converts the value handed to
@@ -54,19 +55,11 @@ public class ConvertingPropertyAccessor<T> extends SimplePersistentPropertyPathA
 		this.conversionService = conversionService;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.PersistentPropertyAccessor#setProperty(org.springframework.data.mapping.PersistentProperty, java.lang.Object)
-	 */
 	@Override
 	public void setProperty(PersistentProperty<?> property, @Nullable Object value) {
 		accessor.setProperty(property, convertIfNecessary(value, property.getType()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.PersistentPropertyAccessor#setProperty(org.springframework.data.mapping.PersistentPropertyPath, java.lang.Object)
-	 */
 	@Override
 	public void setProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path, @Nullable Object value) {
 
@@ -91,10 +84,6 @@ public class ConvertingPropertyAccessor<T> extends SimplePersistentPropertyPathA
 		return convertIfNecessary(getProperty(property), targetType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.SimplePersistentPropertyPathAccessor#getTypedProperty(org.springframework.data.mapping.PersistentProperty, java.lang.Class)
-	 */
 	@Nullable
 	@Override
 	protected <S> S getTypedProperty(PersistentProperty<?> property, Class<S> type) {
@@ -115,7 +104,7 @@ public class ConvertingPropertyAccessor<T> extends SimplePersistentPropertyPathA
 
 		return (S) (source == null //
 				? null //
-				: type.isAssignableFrom(source.getClass()) //
+				: ClassUtils.resolvePrimitiveIfNecessary(type).isAssignableFrom(source.getClass()) //
 						? source //
 						: conversionService.convert(source, type));
 	}

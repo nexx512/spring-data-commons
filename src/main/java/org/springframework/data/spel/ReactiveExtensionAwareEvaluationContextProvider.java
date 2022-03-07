@@ -27,6 +27,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.spel.spi.ExtensionIdAware;
 import org.springframework.data.spel.spi.ReactiveEvaluationContextExtension;
+import org.springframework.data.util.Predicates;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -69,38 +70,22 @@ public class ReactiveExtensionAwareEvaluationContextProvider implements Reactive
 		evaluationContextProvider = new ExtensionAwareEvaluationContextProvider(extensions);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.spel.EvaluationContextProvider#getEvaluationContext(Object)
-	 */
 	@Override
 	public EvaluationContext getEvaluationContext(Object rootObject) {
 		return evaluationContextProvider.getEvaluationContext(rootObject);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.spel.EvaluationContextProvider#getEvaluationContext(java.lang.Object, org.springframework.data.spel.ExpressionDependencies)
-	 */
 	@Override
 	public EvaluationContext getEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
 		return evaluationContextProvider.getEvaluationContext(rootObject, dependencies);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.spel.ReactiveEvaluationContextProvider#getEvaluationContextLater(java.lang.Object)
-	 */
 	@Override
 	public Mono<StandardEvaluationContext> getEvaluationContextLater(Object rootObject) {
-		return getExtensions(it -> true) //
+		return getExtensions(Predicates.isTrue()) //
 				.map(it -> evaluationContextProvider.doGetEvaluationContext(rootObject, it));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.spel.ReactiveEvaluationContextProvider#getEvaluationContextLater(java.lang.Object, org.springframework.data.spel.ExpressionDependencies)
-	 */
 	@Override
 	public Mono<StandardEvaluationContext> getEvaluationContextLater(Object rootObject,
 			ExpressionDependencies dependencies) {

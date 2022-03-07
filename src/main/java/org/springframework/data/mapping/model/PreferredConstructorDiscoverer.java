@@ -24,8 +24,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Qualifier;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
@@ -44,6 +48,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Roman Rodov
  * @author Mark Paluch
+ * @author Xeno Amess
  */
 public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<P>> {
 
@@ -93,10 +98,6 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 		 */
 		DEFAULT {
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mapping.model.PreferredConstructorDiscoverers#discover(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.PersistentEntity)
-			 */
 			@Nullable
 			@Override
 			<T, P extends PersistentProperty<P>> PreferredConstructor<T, P> discover(TypeInformation<T> type,
@@ -113,7 +114,7 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 						continue;
 					}
 
-					if (candidate.isAnnotationPresent(PersistenceConstructor.class)) {
+					if (AnnotationUtils.findAnnotation(candidate, PersistenceConstructor.class) != null) {
 						return buildPreferredConstructor(candidate, type, entity);
 					}
 
@@ -138,10 +139,6 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 		 */
 		KOTLIN {
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mapping.model.PreferredConstructorDiscoverers#discover(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.PersistentEntity)
-			 */
 			@Nullable
 			@Override
 			<T, P extends PersistentProperty<P>> PreferredConstructor<T, P> discover(TypeInformation<T> type,
@@ -151,7 +148,7 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 
 				return Arrays.stream(rawOwningType.getDeclaredConstructors()) //
 						.filter(it -> !it.isSynthetic()) // Synthetic constructors should not be considered
-						.filter(it -> it.isAnnotationPresent(PersistenceConstructor.class)) // Explicitly defined constructor trumps
+						.filter(it -> AnnotationUtils.findAnnotation(it, PersistenceConstructor.class) != null) // Explicitly defined constructor trumps
 																																								// all
 						.map(it -> buildPreferredConstructor(it, type, entity)) //
 						.findFirst() //

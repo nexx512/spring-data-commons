@@ -23,8 +23,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -42,6 +44,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Myeonghyeon Lee
+ * @author Xeno Amess
  */
 public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 
@@ -110,7 +113,7 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 	 * @return
 	 */
 	public boolean isExplicitlyAnnotated() {
-		return constructor.isAnnotationPresent(PersistenceConstructor.class);
+		return AnnotationUtils.findAnnotation(constructor, PersistenceConstructor.class) != null;
 	}
 
 	/**
@@ -283,10 +286,6 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 			return this.hasSpelExpression.get();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object o) {
 
@@ -313,10 +312,6 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 			return ObjectUtils.nullSafeEquals(entity, parameter.entity);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			var result = ObjectUtils.nullSafeHashCode(name);

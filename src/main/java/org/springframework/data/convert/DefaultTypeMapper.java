@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
@@ -39,7 +40,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class DefaultTypeMapper<S> implements TypeMapper<S> {
+public class DefaultTypeMapper<S> implements TypeMapper<S>, BeanClassLoaderAware {
 
 	private final TypeAliasAccessor<S> accessor;
 	private final List<? extends TypeInformationMapper> mappers;
@@ -106,11 +107,8 @@ public class DefaultTypeMapper<S> implements TypeMapper<S> {
 		};
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.TypeMapper#readType(java.lang.Object)
-	 */
 	@Nullable
+	@Override
 	public TypeInformation<?> readType(S source) {
 
 		Assert.notNull(source, "Source object must not be null!");
@@ -137,10 +135,7 @@ public class DefaultTypeMapper<S> implements TypeMapper<S> {
 		return typeInformation.orElse(null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.TypeMapper#readType(java.lang.Object, org.springframework.data.util.TypeInformation)
-	 */
+	@Override
 	public <T> TypeInformation<? extends T> readType(S source, TypeInformation<T> basicType) {
 
 		Assert.notNull(source, "Source must not be null!");
@@ -193,18 +188,12 @@ public class DefaultTypeMapper<S> implements TypeMapper<S> {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.TypeMapper#writeType(java.lang.Class, java.lang.Object)
-	 */
+	@Override
 	public void writeType(Class<?> type, S dbObject) {
 		writeType(ClassTypeInformation.from(type), dbObject);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.TypeMapper#writeType(org.springframework.data.util.TypeInformation, java.lang.Object)
-	 */
+	@Override
 	public void writeType(TypeInformation<?> info, S sink) {
 
 		Assert.notNull(info, "TypeInformation must not be null!");
@@ -212,6 +201,15 @@ public class DefaultTypeMapper<S> implements TypeMapper<S> {
 		var alias = getAliasFor(info);
 		if (alias.isPresent()) {
 			accessor.writeTypeTo(sink, alias.getValue());
+		}
+	}
+
+	@Override
+	public void setBeanClassLoader(ClassLoader classLoader) {
+		for (TypeInformationMapper mapper : mappers) {
+			if (mapper instanceof BeanClassLoaderAware) {
+				((BeanClassLoaderAware) mapper).setBeanClassLoader(classLoader);
+			}
 		}
 	}
 

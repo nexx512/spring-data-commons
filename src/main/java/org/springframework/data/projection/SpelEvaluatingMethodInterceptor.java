@@ -26,6 +26,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.context.expression.MapAccessor;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
@@ -44,6 +45,7 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Xeno Amess
  * @see 1.10
  */
 class SpelEvaluatingMethodInterceptor implements MethodInterceptor {
@@ -107,11 +109,10 @@ class SpelEvaluatingMethodInterceptor implements MethodInterceptor {
 
 		for (var method : targetInterface.getMethods()) {
 
-			if (!method.isAnnotationPresent(Value.class)) {
+			var value = AnnotationUtils.findAnnotation(method, Value.class);
+			if (value == null) {
 				continue;
 			}
-
-			var value = method.getAnnotation(Value.class);
 
 			if (!StringUtils.hasText(value.value())) {
 				throw new IllegalStateException(String.format("@Value annotation on %s contains empty expression!", method));
@@ -123,10 +124,6 @@ class SpelEvaluatingMethodInterceptor implements MethodInterceptor {
 		return Collections.unmodifiableMap(expressions);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
-	 */
 	@Nullable
 	@Override
 	public Object invoke(@SuppressWarnings("null") MethodInvocation invocation) throws Throwable {
@@ -167,10 +164,6 @@ class SpelEvaluatingMethodInterceptor implements MethodInterceptor {
 			return this.args;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object o) {
 
@@ -189,10 +182,6 @@ class SpelEvaluatingMethodInterceptor implements MethodInterceptor {
 			return ObjectUtils.nullSafeEquals(args, that.args);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			var result = ObjectUtils.nullSafeHashCode(target);
@@ -200,10 +189,6 @@ class SpelEvaluatingMethodInterceptor implements MethodInterceptor {
 			return result;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return "SpelEvaluatingMethodInterceptor.TargetWrapper(target=" + this.getTarget() + ", args="

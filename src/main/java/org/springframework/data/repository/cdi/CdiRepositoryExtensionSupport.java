@@ -49,6 +49,7 @@ import org.springframework.data.repository.config.CustomRepositoryImplementation
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Xeno Amess
  */
 public abstract class CdiRepositoryExtensionSupport implements Extension {
 
@@ -98,8 +99,8 @@ public abstract class CdiRepositoryExtensionSupport implements Extension {
 
 		var isInterface = type.isInterface();
 		var extendsRepository = Repository.class.isAssignableFrom(type);
-		var isAnnotated = type.isAnnotationPresent(RepositoryDefinition.class);
-		var excludedByAnnotation = type.isAnnotationPresent(NoRepositoryBean.class);
+		var isAnnotated = isAnnotatedWith(type, RepositoryDefinition.class);
+		var excludedByAnnotation = isAnnotatedDirectlyWith(type, NoRepositoryBean.class);
 
 		return isInterface && (extendsRepository || isAnnotated) && !excludedByAnnotation;
 	}
@@ -113,7 +114,7 @@ public abstract class CdiRepositoryExtensionSupport implements Extension {
 		var annotations = type.getAnnotations();
 		for (var annotation : annotations) {
 			var annotationType = annotation.annotationType();
-			if (annotationType.isAnnotationPresent(Qualifier.class)) {
+			if (isAnnotatedWith(annotationType, Qualifier.class)) {
 				qualifiers.add(annotation);
 			}
 		}
@@ -164,7 +165,7 @@ public abstract class CdiRepositoryExtensionSupport implements Extension {
 
 		var repositoryInterface = bean.getBeanClass();
 
-		if (AnnotationUtils.findAnnotation(repositoryInterface, Eager.class) != null) {
+		if (isAnnotatedWith(repositoryInterface, Eager.class)) {
 			this.eagerRepositories.add(bean);
 		}
 	}
@@ -182,6 +183,14 @@ public abstract class CdiRepositoryExtensionSupport implements Extension {
 	 */
 	protected CdiRepositoryContext getRepositoryContext() {
 		return context;
+	}
+
+	private static boolean isAnnotatedWith(Class<?> type, Class<? extends Annotation> annotationType) {
+		return AnnotationUtils.findAnnotation(type, annotationType) != null;
+	}
+
+	private static boolean isAnnotatedDirectlyWith(Class<?> type, Class<? extends Annotation> annotationType) {
+		return AnnotationUtils.isAnnotationDeclaredLocally(annotationType, type);
 	}
 
 	@SuppressWarnings("all")
